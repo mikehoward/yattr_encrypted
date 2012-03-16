@@ -1,6 +1,6 @@
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
+require 'rdoc/task'
 
 desc 'Default: run unit tests.'
 task :default => :test
@@ -13,11 +13,19 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = true
 end
 
-desc 'Generate documentation for the yattr_encrypted gem.'
-Rake::RDocTask.new(:rdoc) do |rdoc|
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title    = 'yattr_encrypted'
-  rdoc.options << '--line-numbers' << '--inline-source'
-  rdoc.rdoc_files.include('README*')
-  rdoc.rdoc_files.include('lib/**/*.rb')
+desc 'Build Gem'
+task 'gem' do
+  system 'gem build yattr_encrypted.gemspec'
 end
+
+desc 'Generate documentation for the yattr_encrypted gem.'
+task 'rdoc' do
+  system 'rdoc README.rdoc lib/'
+end
+# RDoc::Task.new do |rdoc|
+#     rdoc.rdoc_dir = 'rdoc'
+#     rdoc.title    = 'yattr_encrypted'
+#     rdoc.options << '--line-numbers' << '--inline-source'
+#     rdoc.rdoc_files.include('README*')
+#     rdoc.rdoc_files.include('lib/**/*.rb')
+# end

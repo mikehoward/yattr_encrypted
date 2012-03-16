@@ -1,15 +1,5 @@
 require File.expand_path('../test_helper', __FILE__)
 
-class SillyEncryptor
-  def self.silly_encrypt(options)
-    (options[:value] + options[:some_arg]).reverse
-  end
-
-  def self.silly_decrypt(options)
-    options[:value].reverse.gsub(/#{options[:some_arg]}$/, '')
-  end
-end
-
 class User
   self.yattr_encrypted_options[:key] = Proc.new { |user| user.class.to_s } # default key
 
