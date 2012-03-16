@@ -15,52 +15,52 @@ In **yattr_encrypted** you do not have a choice of algorithm, encoding, addition
 encrypt/decrypt methods, conditional encryption, or underlying data mapper.
 You also have to use Rails 3.1+.
 
-Inmore detail, here is where they differ:
+In more detail, here is where they differ:
 
 **yattr_encrypted** does not support:
 
-* DataMapper - is not supported
-* Sequel - is not supported
-* ActiveRecord - find_by*** methods
+* DataMapper
+* Sequel
+* ActiveRecord find_by*** methods for encrypted fields
 * alternate encryption methods
+* alternate encryption algorithms
 * String#encrypt, #encrypt!, #decrypt, and #decrypt!
 * most of the options **yattr_encrypted** supports
 * conditional encrypting - **yattr_encrypted** supports conditionally encrypting
 fields based on some logic. I don't have a use case for this, so **yattr_encrypted**
 does not support it.
 
-**yattr_encrypted** is also self contained - only relies on the *openssl* gem, whereas
-the *shuber* gem depends on *encryptor*.
+**yattr_encrypted** is also self contained - only relies on the *openssl* (part
+of the Ruby Standard Library), whereas the *shuber* gem depends on *encryptor*.
 
-**yattr_encrypted** *does* support:
+What **yattr_encrypted** *does* support:
 
 * **yattr_encrypted** ONLY works with ActiveRecord
 * random initial values for each encrypted attribute. This is done by creating a
-random *iv* and including it in the encrypted data. This is supposed to be OK
-in that *iv* values don't need the same security as keys.
+random *iv* and including it in the encrypted data. See *openssl* documentation
+for details [OpenSSL::Cipher]
 * detects when fields are modified by actions other than assignment. This supports
 encrypting complex types - such as hashes and arrays. This is implemented by adding
 *save* and *save!* methods to models
-* Rails 3.1 & Rails 3.2 - don't pretend to support anything lower (but it might work)
+* Rails 3.1 & Rails 3.2 - doesn't pretend to support anything lower (but it might work)
 
 
 ## Installation
 
 Either
 
-  gem install yattr_encrypted
+    gem install yattr_encrypted
 
-Or add `gem yattr_encrypted` to your Gemfile
+Or add to your Gemfile
+
+    gem yattr_encrypted
 
 ## Usage
 
-### Basic
+Name each field you want to encrypt in the `yattr_encrypted` macro.
 
-For each attribute you want to encrypt:
-
-assuming that you want to encrypt a field named `foo`, then create
-a field in your *migration* named `foo_encrypted`. Then add the `yattr_encrypted`
-macro to the model.
+For example, assume that you want to encrypt a field named `foo`. Then create
+a field in your *migration* named `foo_encrypted`.
 
     class Foo < ActiveRecord::Base
       yattr_encrypted :foo
@@ -70,7 +70,7 @@ This will add accessor methods `foo` and `foo=` to your model. You do not use th
 actual `foo_encrypted` field directly.
 
 NOTE: `foo` is not useable for search. If you want to search on encrypted fields,
-use **yattr_encrypted**. **yattr_encrypted** does not create searchable fields because
+use **attr\_encrypted**. **yattr\_encrypted** does not create searchable fields because
 it automatically generates random initial values so it is not possible to generate
 matching encrypted values without retrieving the encrypted data.
 
@@ -92,14 +92,15 @@ want them.
 The default encryption key is the value of `<application>::Application.config.secret_token`
 which is in `config/initializers/secret_token.rb`.
 
-If you want, you can specify the key on a field by field basis using the `:key` option.
+If you want to use some other key - on a field by field basis,
+you can specify the key on a field by field basis using the `:key` option.
 
 NOTE: all encryption uses `ase-256-cbc` with random initial values. For some reason this
 triggers a key length check in **openssl** which raises an exception if your key is
 too short. I don't know what the required key length is, but `secrete_token` is long enough
 and 'this is a very long secret key' is not.
 
-If you supply your own key, it can be a Proc.
+If you supply your own key, it can be a String or a Proc which returns a String.
 
 ### Initial Values
 
@@ -109,10 +110,15 @@ override this, nor can you provide your own initial values.
 
 ### Encryption Method
 
-**yattr_encrypted** only uses `aes-256-cbc`. If you want variety, use **yattr_encrypted**, which
+**yattr\_encrypted** only uses `aes-256-cbc`. If you want variety, use **attr\_encrypted**, which
 supports the entire gamete supplied by **openssl**
 
-### Encoding & etc
+### Encoding of Encrypted Data and Database Compatibility
+
+All data saved in the database is `base64` encode. All fields are further
+serialized as JSON objects. This is to avoid dealing with any database idiodicy
+and to transparently handle complex data types being used in database fields [such as
+Hashes and Arrays].
 
 The encoding algorithm for a field is:
 
@@ -129,7 +135,3 @@ The decoding algorithm is:
     encrypted_data = field_decoded[(len+1)..-1]
     field_jsonified = YattrEncrypted.decrypt encrypted_data, iv
     field = ActiveSupprt::JSON.decode field_jsonified
-
-#### Dynamic find_by_ and scoped_by_ methods
-
-Not supported. You cannot find_by... nor can you scope by encrypted fields.
