@@ -85,20 +85,22 @@ module YattrEncrypted
     options = {
       :prefix           => '',
       :suffix           => '_encrypted',
-      :key              => ''
+      :key              => Rails.application.config.secret_token,
     }.merge!(yattr_encrypted_options).merge!(attributes.last.is_a?(Hash) ? attributes.pop : {})
-
-    options[:encode] = options[:default_encoding] if options[:encode] == true
 
     attributes.each do |attribute|
       encrypted_attribute_name = (options[:attribute] ? options[:attribute] : [options[:prefix], attribute, options[:suffix]].join).to_sym
 
       instance_methods_as_symbols = instance_methods.collect { |method| method.to_sym }
-      attr_reader encrypted_attribute_name unless instance_methods_as_symbols.include?(encrypted_attribute_name)
-      attr_writer encrypted_attribute_name unless instance_methods_as_symbols.include?(:"#{encrypted_attribute_name}=")
+      attr_reader encrypted_attribute_name \
+          unless instance_methods_as_symbols.include?(encrypted_attribute_name)
+      attr_writer encrypted_attribute_name \
+          unless instance_methods_as_symbols.include?(:"#{encrypted_attribute_name}=")
 
       define_method(attribute) do
-        instance_variable_get("@#{attribute}") || instance_variable_set("@#{attribute}", decrypt(attribute, send(encrypted_attribute_name)))
+        instance_variable_get("@#{attribute}") || \
+          instance_variable_set("@#{attribute}", 
+            decrypt(attribute, send(encrypted_attribute_name)))
       end
 
       define_method("#{attribute}=") do |value|
@@ -111,7 +113,8 @@ module YattrEncrypted
         value.respond_to?(:empty?) ? !value.empty? : !!value
       end
 
-      encrypted_attributes[attribute.to_sym] = options.merge(:attribute => encrypted_attribute_name)
+      encrypted_attributes[attribute.to_sym] = \
+          options.merge(:attribute => encrypted_attribute_name)
     end
   end
   alias_method :attr_encryptor, :yattr_encrypted
