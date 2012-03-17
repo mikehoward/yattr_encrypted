@@ -44,7 +44,7 @@ class PersonWithValidation < Person
   validates_uniqueness_of :encrypted_email
 end
 
-class ActiveRecordTest < Test::Unit::TestCase
+class ActiveRecordTest < MiniTest::Unit::TestCase
 
   def setup
     ActiveRecord::Base.connection.tables.each { |table| ActiveRecord::Base.connection.drop_table(table) }

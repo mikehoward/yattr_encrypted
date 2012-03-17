@@ -1,17 +1,24 @@
 require 'rake'
-require 'rake/testtask'
-require 'rdoc/task'
+# require 'rake/testtask'
+# require 'rdoc/task'
 
 desc 'Default: run unit tests.'
 task :default => :test
 
 desc 'Test the yattr_encrypted gem.'
-Rake::TestTask.new(:test) do |t|
-  t.libs << 'lib'
-  # t.pattern = 'test/**/*_test.rb'
-  t.pattern = ENV['TEST'] ? ENV['TEST'] : 'test/**/*_test.rb'
-  t.verbose = true
+task :test do
+  if ENV['TEST']
+    system "ruby #{ENV['TEST']}"
+  else
+    system "ruby test"
+  end
 end
+# Rake::TestTask.new(:test) do |t|
+#   t.libs << 'lib'
+#   # t.pattern = 'test/**/*_test.rb'
+#   t.pattern = ENV['TEST'] ? ENV['TEST'] : 'test/**/*_test.rb'
+#   t.verbose = true
+# end
 
 desc 'Build Gem'
 task 'gem' do
