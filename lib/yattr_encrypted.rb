@@ -132,26 +132,27 @@ module YattrEncrypted
     self.class.yate_encrypted_attributes.has_key?(attribute.to_sym)
   end
 
-  def save
+  def save *args
     yate_update_encrypted_values
     super
   end
   
-  def save!
+  def save! *args
     yate_update_encrypted_values
     super
   end
   
   def update_attribute attribute, value
     if (options = yate_encrypted_attributes[attribute])
-      update_attribute options[attribute], yate_encrypt(attribute, options[key]) \
+      self.send "#{attribute}=".to_sym, value
+      update_attribute options[:attribute], self.send(options[:attribute]) \
         if yate_field_changed? attribute
     else
       super
     end
   end
 
-  def update_attributes attributes, options
+  def update_attributes attributes, options = {}
     attributes.each do |attribute, value|
       put "FIXME: update_attributes doesn't work yet"
     end
