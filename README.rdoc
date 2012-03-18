@@ -1,4 +1,4 @@
-# yattr_encrypted
+# yattr_encrypted #
 
 This is based on code stolen from *yattr_encrypted* and *encryptor* - both by
 github.com/shuber - and both very fine gems.
@@ -45,7 +45,7 @@ encrypting complex types - such as hashes and arrays. This is implemented by add
 * Rails 3.1 & Rails 3.2 - doesn't pretend to support anything lower (but it might work)
 
 
-## Installation
+## Installation ##
 
 Either
 
@@ -55,7 +55,7 @@ Or add to your Gemfile
 
     gem yattr_encrypted
 
-## Usage
+## Usage ##
 
 Name each field you want to encrypt in the `yattr_encrypted` macro.
 
@@ -74,7 +74,7 @@ use **attr\_encrypted**. **yattr\_encrypted** does not create searchable fields 
 it automatically generates random initial values so it is not possible to generate
 matching encrypted values without retrieving the encrypted data.
 
-### Options
+### Options ###
 
 The encrypted field name defaults to `<field>_encrypted`. You can change this on
 a field by field basis using the `:prefix` and `:suffix`  - which define strings
@@ -102,18 +102,18 @@ and 'this is a very long secret key' is not.
 
 If you supply your own key, it can be a String or a Proc which returns a String.
 
-### Initial Values
+### Initial Values ###
 
 As stated everywhere - random initial values are automatically generated for all fields.
 They are prepended to the actual encrypted data and stripped during decryption. You can't
 override this, nor can you provide your own initial values.
 
-### Encryption Method
+### Encryption Method ###
 
 **yattr\_encrypted** only uses `aes-256-cbc`. If you want variety, use **attr\_encrypted**, which
 supports the entire gamete supplied by **openssl**
 
-### Encoding of Encrypted Data and Database Compatibility
+### Encoding of Encrypted Data and Database Compatibility ###
 
 All data saved in the database is `base64` encode. All fields are further
 serialized as JSON objects. This is to avoid dealing with any database idiodicy
