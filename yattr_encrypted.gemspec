@@ -23,14 +23,12 @@ Gem::Specification.new do |s|
   # s.homepage = 'http://github.com/shuber/attr_encrypted'
 
   s.has_rdoc = false
-  s.rdoc_options = ['--line-numbers', '--inline-source', '--main', 'README.rdoc']
+  s.rdoc_options = ['--line-numbers', '--inline-source', '--main', 'README.mdown']
 
   s.require_paths = ['lib']
 
-  s.files      = Dir['{bin,lib}/**/*'] + %w(MIT-LICENSE Rakefile README.rdoc)
+  s.files      = Dir['{bin,lib}/**/*'] + %w(MIT-LICENSE Rakefile README.mdown Gemfile)
   s.test_files = Dir['test/**/*']
 
-  # s.add_development_dependency('activerecord', ['>= 2.0.0'])
-  s.add_development_dependency('activerecord', ['~> 3.1.0'])
-  s.add_development_dependency('mocha')
+  s.add_development_dependency('pry')
 end
