@@ -17,7 +17,8 @@ Gem::Specification.new do |s|
 
   s.author    = 'Mike Howard'
   s.email     = 'mike@clove.com'
-  s.homepage  = 'http://github.mikhoward/yattr_encrypted'
+  s.homepage  = 'https://github.com/mikehoward/yattr_encrypted'
+  # Based on attr_encrypted and encryptor by Sean Huber
   # s.author   = 'Sean Huber'
   # s.email    = 'shuber@huberry.com'
   # s.homepage = 'http://github.com/shuber/attr_encrypted'
