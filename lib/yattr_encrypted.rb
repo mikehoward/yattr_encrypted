@@ -1,4 +1,7 @@
 require 'openssl'
+require 'active_support'
+require 'base64'
+require 'yattr_encrypted/railtie' if defined?(Rails)
 
 # how to use
 #
@@ -64,6 +67,9 @@ module YattrEncrypted
         # merge specific options
         options.merge!(attributes.pop) if Hash === attributes.last
 
+        # tell self to define instance methods from the database if they have not already been generated
+        define_attribute_methods unless attribute_methods_generated?
+
         # collect existing instance methods
         instance_methods_as_symbols = instance_methods.map { |method| method.to_sym }
 
@@ -78,19 +84,30 @@ module YattrEncrypted
               unless instance_methods_as_symbols.include?(:"#{encrypted_attribute_name}=")
 
           tmp =<<-XXX
+          puts "defining #{attribute}"
+          def #{attribute}
             unless @#{attribute}
-              @#{attribute} = yate_decrypt(#{encrypted_attribute_name}, options[:key])
-              @yate_checksums[:#{attribute}] = yate_field_hash_value(:#{attribute})
+              options = yate_encrypted_attributes[:#{attribute}]
+              @#{attribute} = @#{encrypted_attribute_name} ? \
+                  yate_decrypt(#{encrypted_attribute_name}, options[:key]) : \
+                  ''
+              self.yate_checksums[:#{attribute}] = yate_field_hash_value(:#{attribute})
             end
             @#{attribute}
+          end
           XXX
+          class_eval(tmp)
 
-          puts "tmp: #{tmp}"
-          define_method(attribute) do
-            eval tmp
-          end      
-
-          attr_writer attribute
+          tmp =<<-XXX
+          puts "self: #{self}"
+          def #{attribute}= value
+            @#{attribute} = value
+            options = yate_encrypted_attributes[:#{attribute}]
+            instance_variable_set("@\#{options[:attribute]}", yate_encrypt(value, options[:key]))
+            self.yate_checksums[:#{attribute}] = yate_field_hash_value(:#{attribute})
+          end
+          XXX
+          class_eval(tmp)
 
           define_method("#{attribute}?") do
             value = send(attribute)
@@ -106,6 +123,10 @@ module YattrEncrypted
     end
   end
 
+  def yate_checksums
+    @yate_checksums ||= {}
+  end
+  
   # Checks if an attribute is configured with <tt>yattr_encrypted</tt>
   def yattr_encrypted?(attribute)
     self.class.yate_encrypted_attributes.has_key?(attribute.to_sym)
@@ -132,8 +153,9 @@ module YattrEncrypted
 
   def update_attributes attributes, options
     attributes.each do |attribute, value|
-      # FIXME
+      put "FIXME: update_attributes doesn't work yet"
     end
+    super
   end
 
   def yate_encrypted_attributes
@@ -149,41 +171,49 @@ module YattrEncrypted
     cipher.encrypt
     cipher.key = key
     iv = cipher.random_iv
+    
+    # jsonify data
+    value_marshalled = Marshal.dump value
 
     # encrypt data
-    result = cipher.update value
+    result = cipher.update value_marshalled
     result << cipher.final
 
     # return encrypted data and iv
-    ("%04d" % iv.length) + iv + result
+    Base64.encode64(("%04d" % iv.length) + iv + result)
   end
 
   # yate_decrypt(encrypted_value, key)
-  def yate_decrypt(encrypted_value, key)
+  def yate_decrypt(marshalled_value, key)
     # initialize decryptor
     cipher = OpenSSL::Cipher.new(ALGORITHM)
     cipher.decrypt
     cipher.key = key
+    
+    # extract encrypted_value
+    encrypted_value = Base64.decode64 marshalled_value
 
     # extract and set iv
     iv_end = encrypted_value[0..3].to_i + 3
-    cipher.iv = encrypted_value[4..(len)]
-    encrypted_value = encrypted_value[(len+1)..-1]
+    cipher.iv = encrypted_value[4..(iv_end)]
+    encrypted_value = encrypted_value[(iv_end+1)..-1]
 
     # derypte and return
     result = cipher.update(encrypted_value)
     result << cipher.final
+    
+    Marshal.load result
   end
 
   # support for fields which are not atomic values
   def yate_field_hash_value(attribute)
-    attribute = attribute.to_sym unless Symbol === attribute
-    OpenSSL::HMAC.digest('md5', 'ersatz key', self.send(attribute))
+    attribute = attribute.to_s if Symbol === attribute
+    OpenSSL::HMAC.digest('md5', 'ersatz key', Marshal.dump(self.instance_variable_get("@#{attribute}")))
   end
 
   def yate_field_changed?(attribute)
     attribute = attribute.to_sym unless Symbol === attribute
-    yate_field_hash_value(attribute) == @yate_checksums[attribute]
+    yate_field_hash_value(attribute) == self.yate_checksums[attribute]
   end
   
   def yate_update_encrypted_values
