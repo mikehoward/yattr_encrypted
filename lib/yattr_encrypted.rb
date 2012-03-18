@@ -86,9 +86,9 @@ module YattrEncrypted
           tmp =<<-XXX
           puts "defining #{attribute}"
           def #{attribute}
-            unless @#{attribute}
+            unless @#{attribute} && !@#{attribute}.empty?
               options = yate_encrypted_attributes[:#{attribute}]
-              @#{attribute} = @#{encrypted_attribute_name} ? \
+              @#{attribute} = #{encrypted_attribute_name} ? \
                   yate_decrypt(#{encrypted_attribute_name}, options[:key]) : \
                   ''
               self.yate_checksums[:#{attribute}] = yate_field_hash_value(:#{attribute})
@@ -103,7 +103,7 @@ module YattrEncrypted
           def #{attribute}= value
             @#{attribute} = value
             options = yate_encrypted_attributes[:#{attribute}]
-            instance_variable_set("@\#{options[:attribute]}", yate_encrypt(value, options[:key]))
+            self.#{encrypted_attribute_name} = yate_encrypt(value, options[:key])
             self.yate_checksums[:#{attribute}] = yate_field_hash_value(:#{attribute})
           end
           XXX
@@ -218,7 +218,7 @@ module YattrEncrypted
   
   def yate_update_encrypted_values
     yate_encrypted_attributes.each do |attribute, options|
-      self.send options[:attribute], yate_encrypt(attribute, options[:key]) \
+      self.send "#{options[:attribute]}=".to_sym, yate_encrypt(self.send(attribute), options[:key]) \
         if yate_field_changed?(attribute)
     end
   end
