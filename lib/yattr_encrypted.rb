@@ -2,6 +2,7 @@ require 'openssl'
 require 'active_support'
 require 'base64'
 require 'yattr_encrypted/railtie' if defined?(Rails)
+require 'yattr_encrypted/version'
 
 # how to use
 #
@@ -13,9 +14,6 @@ require 'yattr_encrypted/railtie' if defined?(Rails)
 module YattrEncrypted
     
   ALGORITHM = 'aes-256-cbc'
-
-
-  autoload :Version, 'yattr_encrypted/version'
 
   # Generates attr_accessors that encrypt and decrypt attributes transparently
   #

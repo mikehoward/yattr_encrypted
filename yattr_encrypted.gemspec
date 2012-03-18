@@ -8,7 +8,7 @@ require 'date'
 
 Gem::Specification.new do |s|
   s.name    = 'yattr_encrypted'
-  s.version = YattrEncrypted::Version.string
+  s.version = YattrEncrypted::VERSION
   s.date    = Date.today
 
   s.summary     = 'Encrypt and decrypt attributes'

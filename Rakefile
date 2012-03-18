@@ -10,7 +10,7 @@ task :test do
   if ENV['TEST']
     system "ruby #{ENV['TEST']}"
   else
-    system "ruby test"
+    system "ruby test/*_test.rb"
   end
 end
 # Rake::TestTask.new(:test) do |t|

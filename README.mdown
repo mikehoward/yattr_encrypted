@@ -1,4 +1,16 @@
-# yattr_encrypted #
+# YattrEncrypted #
+
+Version: 0.1.0  (but you should check lib/yattr_encrypted/version.rb to be sure)
+
+## Applicability ##
+
+This code has been tested
+
+* using ruby 1.9.2-p290
+* stand alone
+* Rails 3.1.4
+
+## Description ##
 
 This is based on code stolen from *yattr_encrypted* and *encryptor* - both by
 github.com/shuber - and both very fine gems.
