@@ -92,6 +92,7 @@ module YattrEncrypted
                   yate_decrypt(#{encrypted_attribute_name}, options[:key]) : \
                   ''
               self.yate_checksums[:#{attribute}] = yate_field_hash_value(:#{attribute})
+              self.yate_dirty[:#{attribute}] = true
             end
             @#{attribute}
           end
@@ -105,6 +106,7 @@ module YattrEncrypted
             options = yate_encrypted_attributes[:#{attribute}]
             self.#{encrypted_attribute_name} = yate_encrypt(value, options[:key])
             self.yate_checksums[:#{attribute}] = yate_field_hash_value(:#{attribute})
+            self.yate_dirty[:#{attribute}] = true
           end
           XXX
           class_eval(tmp)
@@ -141,8 +143,7 @@ module YattrEncrypted
   def update_attribute attribute, value
     if (options = yate_encrypted_attributes[attribute])
       self.send "#{attribute}=".to_sym, value
-      update_attribute options[:attribute], self.send(options[:attribute]) \
-        if yate_field_changed? attribute
+      update_attribute options[:attribute], self.send(options[:attribute]) if yate_field_changed? attribute
     else
       super
     end
@@ -167,6 +168,10 @@ module YattrEncrypted
   
   def yate_checksums
     @yate_checksums ||= {}
+  end
+
+  def yate_dirty
+    @yate_dirty ||= {}
   end
 
   def yate_encrypted_attributes
@@ -224,13 +229,15 @@ module YattrEncrypted
 
   def yate_field_changed?(attribute)
     attribute = attribute.to_sym unless Symbol === attribute
-    yate_field_hash_value(attribute) == self.yate_checksums[attribute]
+    yate_field_hash_value(attribute) != self.yate_checksums[attribute] || self.yate_dirty[attribute]
   end
   
   def yate_update_encrypted_values
     yate_encrypted_attributes.each do |attribute, options|
-      self.send "#{options[:attribute]}=".to_sym, yate_encrypt(self.send(attribute), options[:key]) \
-        if yate_field_changed?(attribute)
+      if yate_field_changed?(attribute)
+        self.send "#{options[:attribute]}=".to_sym, yate_encrypt(self.send(attribute), options[:key])
+        yate_dirty.delete(attribute)
+      end
     end
   end
 

@@ -12,15 +12,19 @@ module ActiveRecord
     end
 
     def save
+      true
     end
     
     def save!
+      true
     end
     
     def update_attribute attribute, value
+      true
     end
     
     def update_attributes attribute_hash, options
+      true
     end
   end
 end
@@ -54,6 +58,9 @@ class TestYattrEncrypted < MiniTest::Unit::TestCase
   
   def test_save_should_update_encrypted
     @sc.field = { key: 'value' }
-pry binding
+    @sc.save
+    options = @sc.send(:yate_encrypted_attributes)[:field]
+    decrypted = @sc.send(:yate_decrypt, @sc.field_encrypted, options[:key])
+    assert_equal( { key: 'value' }, decrypted, "decrypt @sc.field_encrypted should be correct")
   end
 end
