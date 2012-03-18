@@ -122,10 +122,6 @@ module YattrEncrypted
       end
     end
   end
-
-  def yate_checksums
-    @yate_checksums ||= {}
-  end
   
   # Checks if an attribute is configured with <tt>yattr_encrypted</tt>
   def yattr_encrypted?(attribute)
@@ -152,11 +148,25 @@ module YattrEncrypted
     end
   end
 
-  def update_attributes attributes, options = {}
-    attributes.each do |attribute, value|
-      put "FIXME: update_attributes doesn't work yet"
+  def update_attributes params, options = {}
+    tmp = {}
+    params.keys.each do |attribute|
+      if (options = yate_encrypted_attributes[attribute])
+        self.send "#{attribute}=", params[attribute]
+        tmp[options[:attribute]] = self.send options[:attribute]
+      else
+        tmp[attribute] = params[attribute]
+      end
     end
+    params = tmp
     super
+  end
+
+  # protected methods - nobody needs to use these outside of the model
+  protected
+  
+  def yate_checksums
+    @yate_checksums ||= {}
   end
 
   def yate_encrypted_attributes

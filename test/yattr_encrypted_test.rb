@@ -7,6 +7,10 @@ module ActiveRecord
   class Base
     include YattrEncrypted
 
+    def self.attribute_methods_generated?
+      true
+    end
+
     def save
     end
     
@@ -43,8 +47,7 @@ class TestYattrEncrypted < MiniTest::Unit::TestCase
     @sc.field = 'a field value'
     refute_nil @sc.field_encrypted, "field_encrypted should not be nil"
     assert_equal 'a field value', @sc.field, "@sc.field should match input"
-    options = @sc.yate_encrypted_attributes[:field]
-pry binding
+    options = @sc.send(:yate_encrypted_attributes)[:field]
     assert_equal 'a field value', @sc.send(:yate_decrypt, @sc.field_encrypted, options[:key]), \
       "decrypting @sc.field_encrypted should match input"
   end
