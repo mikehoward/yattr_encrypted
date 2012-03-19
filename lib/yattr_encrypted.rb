@@ -87,14 +87,17 @@ module YattrEncrypted
           tmp =<<-XXX
           def #{attribute}
             options = yate_encrypted_attributes[:#{attribute}]
-            unless @#{attribute} && !@#{attribute}.empty?
+            if @#{attribute}.nil? || @#{attribute}.empty?
               @#{attribute} = #{encrypted_attribute_name} ? \
                   yate_decrypt(#{encrypted_attribute_name}, options[:key]) : \
                   ''
+              @#{attribute} = options[:read_filter].call(@#{attribute}) if options[:read_filter]
               self.yate_checksums[:#{attribute}] = yate_attribute_hash_value(:#{attribute})
               self.yate_dirty[:#{attribute}] = true
+            elsif options[:read_filter]
+              @#{attribute} = options[:read_filter].call(@#{attribute})
             end
-            options[:read_filter] ? options[:read_filter].call(@#{attribute}) : @#{attribute}
+            @#{attribute}
           end
           XXX
           class_eval(tmp)
