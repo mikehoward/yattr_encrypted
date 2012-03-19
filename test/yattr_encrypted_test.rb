@@ -35,8 +35,12 @@ module ActiveRecord
 end
 
 class SomeClass < ActiveRecord::Base
-  attr_accessor :field_encrypted
+  attr_accessor :field_encrypted, :special_reader_encrypted, :special_writer_encrypted
   yattr_encrypted :field, :key => 'a honkin big key: honk honk honk honk honk'
+  yattr_encrypted :special_reader, :key => 'a honkin big key: honk honk honk honk honk',
+    :read_filter => lambda { |val| val.strip }
+  yattr_encrypted :special_writer, :key => 'a honkin big key: honk honk honk honk honk',
+    :write_filter => lambda { |val| puts val; val.upcase }
 end
 
 class TestYattrEncrypted < MiniTest::Unit::TestCase
@@ -72,5 +76,22 @@ class TestYattrEncrypted < MiniTest::Unit::TestCase
     options = @sc.send(:yate_encrypted_attributes)[:field]
     decrypted = @sc.send(:yate_decrypt, @sc.field_encrypted, options[:key])
     assert_equal( { key: 'value' }, decrypted, "decrypt @sc.field_encrypted should be correct")
+  end
+  
+  def test_special_reader
+    value = 'a string with leading and trailing white space'
+    value_with_whitespace = '    ' + value + '   '
+    @sc.special_reader = value_with_whitespace
+    assert_equal value_with_whitespace, @sc.instance_variable_get(:@special_reader),
+        "@special_reader should include the leading and trailing whitespace"
+    assert_equal value, @sc.special_reader, "@sc.special_reader should have leading and trailing ws stripped"
+  end
+  
+  def test_special_writer
+    value = 'a string with leading and trailing white space'
+    @sc.special_writer = value
+    assert_equal value.upcase, @sc.instance_variable_get(:@special_writer),
+      "@special_writer should be upcased"
+    assert_equal value.upcase, @sc.special_writer, "@sc.special_writer should be upcased"
   end
 end

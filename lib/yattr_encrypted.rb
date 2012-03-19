@@ -76,6 +76,7 @@ module YattrEncrypted
 
         # iterate through attributes and create accessors, verify encryped accessors exist
         attributes.map { |x| x.to_sym }.each do |attribute|
+puts "yate_encrypted: #{attribute}"
           encrypted_attribute_name = [options[:prefix], attribute, options[:suffix]].join.to_sym
 
           # barf if reader and write doesn't exist for encrypted attribute
@@ -86,23 +87,24 @@ module YattrEncrypted
 
           tmp =<<-XXX
           def #{attribute}
+            options = yate_encrypted_attributes[:#{attribute}]
             unless @#{attribute} && !@#{attribute}.empty?
-              options = yate_encrypted_attributes[:#{attribute}]
               @#{attribute} = #{encrypted_attribute_name} ? \
                   yate_decrypt(#{encrypted_attribute_name}, options[:key]) : \
                   ''
               self.yate_checksums[:#{attribute}] = yate_attribute_hash_value(:#{attribute})
               self.yate_dirty[:#{attribute}] = true
             end
-            @#{attribute}
+            options[:read_filter] ? options[:read_filter].call(@#{attribute}) : @#{attribute}
           end
           XXX
           class_eval(tmp)
 
           tmp =<<-XXX
           def #{attribute}= value
-            @#{attribute} = value
             options = yate_encrypted_attributes[:#{attribute}]
+            value = options[:write_filter].call(value) if options[:write_filter]
+            @#{attribute} = value
             self.#{encrypted_attribute_name} = yate_encrypt(value, options[:key])
             self.yate_checksums[:#{attribute}] = yate_attribute_hash_value(:#{attribute})
             self.yate_dirty[:#{attribute}] = true

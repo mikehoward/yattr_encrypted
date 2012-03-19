@@ -1,6 +1,6 @@
 # YattrEncrypted #
 
-Version: 0.1.3  (but you should check lib/yattr_encrypted/version.rb to be sure)
+Version: 0.1.4  (but you should check lib/yattr_encrypted/version.rb to be sure)
 
 ## Applicability ##
 
@@ -88,6 +88,23 @@ matching encrypted values without retrieving the encrypted data.
 
 ### Options ###
 
+**yattr_encrypted** accepts five options:
+
+* :prefix - the prefix which is prepended to *attribute* to form the encrypted attribute
+name. Defaults to ''
+* :suffix - the suffix which appended to *attribute* to form the encrypted attribute
+name. Defaults to '_encrypted'
+* :key - allows attribute specific encryption keys. The default - if not specified - is
+`Rails.application.config.secret_token`
+* :read_filter - a LAMBDA (or Proc) which is called to modify the clear-text value of
+the *attribute* prior to returning it.
+* :write_filter - a LAMBDA (or Proc) which is called on the assigned value prior to
+assigning it to the *attribute*
+
+These options are discussed in some detail below in the applicable section.
+
+### Encrypted Attribute Name ###
+
 The encrypted field name defaults to `<field>_encrypted`. You can change this on
 a field by field basis using the `:prefix` and `:suffix`  - which define strings
 which are prefixed and suffixed to the field name to create the encrypted field name.
@@ -99,7 +116,7 @@ They default to:
 Notice that the underscore ('_') must be included in `:prefix` and `:suffix`, if you
 want them.
 
-### Encryption keys
+### Encryption keys ###
 
 The default encryption key is the value of `<application>::Application.config.secret_token`
 which is in `config/initializers/secret_token.rb`.
@@ -114,7 +131,18 @@ and 'this is a very long secret key' is not.
 
 If you supply your own key, it can be a String or a Proc which returns a String.
 
-### Initial Values ###
+### Special Attribute Processing ###
+
+Special processing for attribute values can be implemented by using the `:read_filter` and
+`:write_filter` options of the `yattr_encrypted` macro.
+
+A `:read_filter` is a proc (or lambda) which accepts a single argument. It is called on the
+value of the *attribute* immediately before being returned by the clear text attribute accessor.
+
+A `:write_filter` is a proc (or lambda) which accepts a single argument. It is called
+on the value passed to the *attribute* writer prior to any other action in the writer.
+
+### Encription Initial Values ###
 
 As stated everywhere - random initial values are automatically generated for all fields.
 They are prepended to the actual encrypted data and stripped during decryption. You can't
