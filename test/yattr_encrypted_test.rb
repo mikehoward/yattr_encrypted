@@ -40,7 +40,7 @@ class SomeClass < ActiveRecord::Base
   yattr_encrypted :special_reader, :key => 'a honkin big key: honk honk honk honk honk',
     :read_filter => lambda { |val| val.strip }
   yattr_encrypted :special_writer, :key => 'a honkin big key: honk honk honk honk honk',
-    :write_filter => lambda { |val| puts val; val.upcase }
+    :write_filter => lambda { |val| val.upcase }
 end
 
 class TestYattrEncrypted < MiniTest::Unit::TestCase

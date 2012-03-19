@@ -1,6 +1,6 @@
 # YattrEncrypted #
 
-Version: 0.1.4  (but you should check lib/yattr_encrypted/version.rb to be sure)
+Version: 0.1.5.pre1  (but you should check lib/yattr_encrypted/version.rb to be sure)
 
 ## Applicability ##
 

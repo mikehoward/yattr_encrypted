@@ -76,7 +76,6 @@ module YattrEncrypted
 
         # iterate through attributes and create accessors, verify encryped accessors exist
         attributes.map { |x| x.to_sym }.each do |attribute|
-puts "yate_encrypted: #{attribute}"
           encrypted_attribute_name = [options[:prefix], attribute, options[:suffix]].join.to_sym
 
           # barf if reader and write doesn't exist for encrypted attribute
