@@ -10,6 +10,11 @@ module ActiveRecord
     def self.attribute_methods_generated?
       true
     end
+    
+    def self.before_save *methods
+      @before_save_hooks ||= []
+      @before_save_hooks += methods
+    end
 
     def save
       true
@@ -39,6 +44,11 @@ class TestYattrEncrypted < MiniTest::Unit::TestCase
     @sc = SomeClass.new
   end
   
+  def test_before_save_hook
+    assert SomeClass.instance_variable_get(:@before_save_hooks).include?(:yate_update_encrypted_values), \
+        "before_save_hooks should include :yate_encrypted_attributes"
+  end
+
   def test_yattr_encrypted_should_create_accessors
     assert @sc.respond_to?(:field), "a SomeClass instance should respond to :field"
     assert @sc.respond_to?(:field=), "a SomeClass instance should respond to :field="
@@ -46,7 +56,7 @@ class TestYattrEncrypted < MiniTest::Unit::TestCase
     assert @sc.respond_to?(:yate_encrypted_attributes), "a SomeClass instance should respond to :yate_encrypted_attributes"
   end
   
-  def test_assigning_field_should_assign_field_encrypted
+  def test_assigning_attribute_should_assign_attribute_encrypted
     assert_nil @sc.field_encrypted, "field_encrypted should be nil prior to assignment to field"
     @sc.field = 'a field value'
     refute_nil @sc.field_encrypted, "field_encrypted should not be nil"
