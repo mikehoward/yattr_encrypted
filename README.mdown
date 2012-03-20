@@ -1,6 +1,6 @@
 # YattrEncrypted #
 
-Version: 0.1.5  (but you should check lib/yattr_encrypted/version.rb to be sure)
+Version: 0.1.6  (but you should check lib/yattr_encrypted/version.rb to be sure)
 
 ## Applicability ##
 
@@ -53,6 +53,9 @@ random *iv* and including it in the encrypted data. See *openssl* documentation
 for details [OpenSSL::Cipher]
 * detects when fields are modified by actions other than assignment. This supports
 encrypting complex types - such as hashes and arrays. This is implemented by adding
+* supports special field processing and initialization by use of `:read_filter` and
+`:write_filter` options which define Proc's or methods which are run on during
+read and write accessors for plaintext versions of the encrypted fields.
 a `before_save` calleback to the private method *yattr_update_encrypted_values*
 * Rails 3.1 & Rails 3.2 - doesn't pretend to support anything lower (but it might work)
 
@@ -131,24 +134,31 @@ and 'this is a very long secret key' is not.
 
 If you supply your own key, it can be a String or a Proc which returns a String.
 
-### Special Attribute Processing ###
+### Special Attribute Processing: read\_filter and write\_filter ###
 
 Special processing for attribute values can be implemented by using the `:read_filter` and
 `:write_filter` options of the `yattr_encrypted` macro.
 
-A `:read_filter` is a proc (or lambda) which accepts a single argument. It is called on the
-value of the *attribute* immediately before being returned by the clear text attribute accessor.
+Both options take *either* a Proc, lambda, or instance method name. In both cases, the callable
+must take a single argument. The argument will be the plaintext value of the field or value
+being assigned.
+
+A `:read_filter` is called on the value of the *attribute* before being returned by the
+clear text attribute accessor. The processed value is saved in the instance variable
+used to support the plaintext version of the *attribute*.
 
 **NOTE:** The read filter is called every time the *attribute* is read via the attribute
-reader. It should be idempotent in the sense that read_filter(attribute) == read_filter(read_filter(attribute)).
+reader. It should be idempotent in the sense that:
 
-**NOTE:** The read filter result is reflected in the instance variable which supports the
-plain text version of the *attribute*, so it can be used to set the *attribute* to a default
+    read_filter(attribute) == read_filter(read_filter(attribute)).
+
+**NOTE:** Because the read filter result is saved in the instance variable which supports the
+plain text version of the *attribute*, it can be used to set the *attribute* to a default
 value - such as an empty Hash.
 
     yattr_encrypted :bag, :read_filter => lambda { |val| val.is_a?(Hash) ? val : {} }
 
-A `:write_filter` is a proc (or lambda) which accepts a single argument. It is called
+A `:write_filter` is a proc, lambda, or instance method which accepts a single argument. It is called
 on the value passed to the *attribute* writer prior to any other action in the writer.
 
 **NOTE:** the write filter is called on every value which is assigned to the *attribute*.

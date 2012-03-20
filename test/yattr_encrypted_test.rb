@@ -35,12 +35,19 @@ module ActiveRecord
 end
 
 class SomeClass < ActiveRecord::Base
-  attr_accessor :field_encrypted, :special_reader_encrypted, :special_writer_encrypted
+  attr_accessor :field_encrypted, :special_reader_encrypted, :special_writer_encrypted,
+    :method_filtered_encrypted
   yattr_encrypted :field, :key => 'a honkin big key: honk honk honk honk honk'
   yattr_encrypted :special_reader, :key => 'a honkin big key: honk honk honk honk honk',
     :read_filter => lambda { |val| val.strip }
   yattr_encrypted :special_writer, :key => 'a honkin big key: honk honk honk honk honk',
     :write_filter => lambda { |val| val.upcase }
+  yattr_encrypted :method_filtered, :key => 'a honkin big key: honk honk honk honk honk',
+    :read_filter => 'foo'
+  
+  def foo attr
+    'foo filtered'
+  end
 end
 
 class TestYattrEncrypted < MiniTest::Unit::TestCase
@@ -93,5 +100,13 @@ class TestYattrEncrypted < MiniTest::Unit::TestCase
     assert_equal value.upcase, @sc.instance_variable_get(:@special_writer),
       "@special_writer should be upcased"
     assert_equal value.upcase, @sc.special_writer, "@sc.special_writer should be upcased"
+  end
+  
+  def test_method_filtered
+    value = 'a string with leading and trailing white space'
+    @sc.method_filtered = value
+    assert_equal value, @sc.instance_variable_get(:@method_filtered),
+      "@method_filtered should be '#{value}'"
+    assert_equal 'foo filtered', @sc.method_filtered, "@sc.method_filtered should be 'foo filtered"
   end
 end

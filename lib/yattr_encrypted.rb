@@ -73,7 +73,7 @@ module YattrEncrypted
 
         # collect existing instance methods
         instance_methods_as_symbols = instance_methods.map { |method| method.to_sym }
-
+ 
         # iterate through attributes and create accessors, verify encryped accessors exist
         attributes.map { |x| x.to_sym }.each do |attribute|
           encrypted_attribute_name = [options[:prefix], attribute, options[:suffix]].join.to_sym
@@ -91,11 +91,19 @@ module YattrEncrypted
               @#{attribute} = #{encrypted_attribute_name} ? \
                   yate_decrypt(#{encrypted_attribute_name}, options[:key]) : \
                   ''
-              @#{attribute} = options[:read_filter].call(@#{attribute}) if options[:read_filter]
+              if options[:read_filter].respond_to? :call
+                  @#{attribute} = options[:read_filter].call(@#{attribute})
+              elsif options[:read_filter]
+                @#{attribute} = self.send options[:read_filter].to_sym, @#{attribute}
+              end
               self.yate_checksums[:#{attribute}] = yate_attribute_hash_value(:#{attribute})
               self.yate_dirty[:#{attribute}] = true
             elsif options[:read_filter]
-              @#{attribute} = options[:read_filter].call(@#{attribute})
+              if options[:read_filter].respond_to? :call
+                @#{attribute} = options[:read_filter].call(@#{attribute})
+              else
+                @#{attribute} = self.send options[:read_filter].to_sym, @#{attribute}
+              end
             end
             @#{attribute}
           end
@@ -105,7 +113,11 @@ module YattrEncrypted
           tmp =<<-XXX
           def #{attribute}= value
             options = yate_encrypted_attributes[:#{attribute}]
-            value = options[:write_filter].call(value) if options[:write_filter]
+            if options[:write_filter].respond_to? :call
+              value = options[:write_filter].call(value)
+            elsif options[:write_filter]
+              value = self.send options[:write_filter], value
+            end
             @#{attribute} = value
             self.#{encrypted_attribute_name} = yate_encrypt(value, options[:key])
             self.yate_checksums[:#{attribute}] = yate_attribute_hash_value(:#{attribute})
