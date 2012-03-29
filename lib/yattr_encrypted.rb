@@ -135,6 +135,17 @@ module YattrEncrypted
 
           self.yate_encrypted_attributes[attribute.to_sym] = \
               options.merge(:attribute => encrypted_attribute_name)
+
+          # this conditioning is a hack to allow stand alone tests to work
+          # one of these days 'real soon now' I'll figure out how to
+          # stub out Rails::Railtie, but until then. . .
+          if defined?(Rails)
+            # add to filter_parameters keep out of log
+            Rails.application.config.filter_parameters += [attribute, encrypted_attribute_name]
+
+            # protect encrypted field from mass assignment
+            attr_protected encrypted_attribute_name.to_sym
+         end
         end
       end
     end

@@ -1,6 +1,6 @@
 # YattrEncrypted #
 
-Version: 0.1.6  (but you should check lib/yattr_encrypted/version.rb to be sure)
+Version: 0.1.7.pre  (but you should check lib/yattr_encrypted/version.rb to be sure)
 
 ## Applicability ##
 
@@ -58,7 +58,11 @@ encrypting complex types - such as hashes and arrays. This is implemented by add
 read and write accessors for plaintext versions of the encrypted fields.
 a `before_save` calleback to the private method *yattr_update_encrypted_values*
 * Rails 3.1 & Rails 3.2 - doesn't pretend to support anything lower (but it might work)
-
+* adds encrypted fields to both attributes_protected (to avoid mass assignment) and
+Rails.application.config.filter_parameters
+* adds plaintext fields to Rails.application.config.filter_parameters - which is not
+needed inasmuch as they are not db fields, so they don't show up in the log anyway.
+(but it can't hurt - just in case)
 
 ## Installation ##
 
